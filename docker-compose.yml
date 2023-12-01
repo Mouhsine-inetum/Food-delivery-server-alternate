@@ -1,8 +1,0 @@
-version: '3.4'
-
-services:
-  fooddeliveryserver.api:
-    image: ${DOCKER_REGISTRY-}fooddeliveryserverapi
-    build:
-      context: .
-      dockerfile: FoodDeliveryServer.Api/Dockerfile
