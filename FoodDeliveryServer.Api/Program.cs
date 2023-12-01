@@ -18,7 +18,6 @@ using Product = FoodDeliveryServer.Data.Models.Product;
 using ProductService = FoodDeliveryServer.Core.Services.ProductService;
 using FoodDeliveryServer.Core.Interfaces;
 using FoodDeliveryServer.Core.Services;
-using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,7 +56,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration, "AzureAd");
 
 
 
