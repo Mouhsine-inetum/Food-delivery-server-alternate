@@ -8,7 +8,7 @@ namespace FoodDeliveryServer.Core.Helpers
 {
     public class TokenHelpers
     {
-        public static string GenerateAccessToken(string jwtSecretKey, string jwtIssuer, IEnumerable<Claim> claims, int expiresIn)
+        public static string GenerateAccessToken(string jwtSecretKey, string jwtIssuer, string Audience,IEnumerable<Claim> claims, int expiresIn)
         {
             SymmetricSecurityKey secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey));
 
@@ -17,6 +17,7 @@ namespace FoodDeliveryServer.Core.Helpers
             JwtSecurityToken securityToken = new JwtSecurityToken(
                 issuer: jwtIssuer,
                 claims: claims,
+                audience:Audience,
                 expires: DateTime.Now.AddSeconds(expiresIn),
                 signingCredentials: signingCredentials
             );

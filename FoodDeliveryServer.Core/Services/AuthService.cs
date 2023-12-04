@@ -120,11 +120,13 @@ namespace FoodDeliveryServer.Core.Services
 
                 string jwtSecretKey = _jwtSettings.GetValue<string>("SecretKey");
                 string jwtIssuer = _jwtSettings.GetValue<string>("ValidIssuer");
+                string jwtAudience = _jwtSettings.GetValue<string>("ValidAudience");
+
 
                 int accessTokenExpiresIn = 1800;
                 int refreshTokenExpiresIn = 2592000;
 
-                string accessTokenPayload = TokenHelpers.GenerateAccessToken(jwtSecretKey, jwtIssuer, claims, accessTokenExpiresIn);
+                string accessTokenPayload = TokenHelpers.GenerateAccessToken(jwtSecretKey, jwtIssuer,jwtAudience, claims, accessTokenExpiresIn);
                 string refreshTokenPayload = TokenHelpers.GenerateRefreshToken();
 
                 TokenResponseDto responseDto = new TokenResponseDto()
@@ -213,10 +215,12 @@ namespace FoodDeliveryServer.Core.Services
 
                 string jwtSecretKey = _jwtSettings.GetValue<string>("SecretKey");
                 string jwtIssuer = _jwtSettings.GetValue<string>("ValidIssuer");
+                string jwtAudience = _jwtSettings.GetValue<string>("ValidAudience");
+
 
                 int accessTokenExpiresIn = 1800;
 
-                string accessToken = TokenHelpers.GenerateAccessToken(jwtSecretKey, jwtIssuer, claims, accessTokenExpiresIn);
+                string accessToken = TokenHelpers.GenerateAccessToken(jwtSecretKey, jwtIssuer, jwtAudience, claims, accessTokenExpiresIn);
 
                 TokenResponseDto responseDto = new TokenResponseDto()
                 {
