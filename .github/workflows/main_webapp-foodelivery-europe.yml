@@ -54,4 +54,4 @@ jobs:
           app-name: 'webapp-foodelivery-europe'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8DA6BA2BA27F4757A92748F7FFC29121 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C51A6211DB87475196780D55DEF84BD0 }}
