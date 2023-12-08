@@ -40,7 +40,11 @@ namespace FoodDeliveryServer.Core.Services
             var set = cloudinarySettings.GetValue<string>("CloudName");
 
             //string cloudinaryUrl = cloudinarySettings.GetValue<string>("CloudinaryUrl");
-            _cloudinary = new Cloudinary(new Account(cloudinarySettings.GetValue<string>("CloudName"),cloudinarySettings.GetValue<string>("ApiKey"),cloudinarySettings.GetValue<string>("ApiSecret")));
+            string cloudName = cloudinarySettings.GetValue<string>("CloudName");
+            string ApiKey = cloudinarySettings.GetValue<string>("ApiKey");
+            string ApiSecret = cloudinarySettings.GetValue<string>("ApiSecret");
+
+            _cloudinary = new Cloudinary(new Account(cloudName, ApiKey, ApiSecret));
         }
 
         public async Task<UserResponseDto> GetProfile(long userId, UserType userType)

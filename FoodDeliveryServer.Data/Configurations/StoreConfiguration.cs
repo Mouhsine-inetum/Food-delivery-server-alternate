@@ -34,8 +34,7 @@ namespace FoodDeliveryServer.Data.Configurations
 
             builder.Property(x => x.DeliveryArea)
                     .IsRequired()
-                    .HasColumnType("geometry");
-            //builder.Property(x => x.DeliveryArea).IsRequired().HasColumnType("geometry (polygon)");
+                    .HasColumnType("nvarchar");
 
             builder.Ignore(x => x.Coordinates);
         }

@@ -30,8 +30,11 @@ namespace FoodDeliveryServer.Core.Services
             _mapper = mapper;
 
             IConfigurationSection cloudinarySettings = config.GetSection("CloudinarySettings");
-            string cloudinaryUrl = cloudinarySettings.GetValue<string>("CloudinaryUrl");
-            _cloudinary = new Cloudinary(cloudinaryUrl);
+            string cloudName = cloudinarySettings.GetValue<string>("CloudName");
+            string ApiKey = cloudinarySettings.GetValue<string>("ApiKey");
+            string ApiSecret = cloudinarySettings.GetValue<string>("ApiSecret");
+            string url= cloudinarySettings.GetValue<string>("CloudinaryUrl");
+            _cloudinary = new Cloudinary(url);
         }
 
         public async Task<List<GetProductResponseDto>> GetProducts(long? storeId)

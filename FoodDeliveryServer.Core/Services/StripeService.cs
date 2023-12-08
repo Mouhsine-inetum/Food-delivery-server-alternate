@@ -21,6 +21,7 @@ namespace FoodDeliveryServer.Core.Services
 
         public async Task HandleStripeWebhook(string json, StringValues signature)
         {
+            //creer dans dans la platefrom stripe
             string webhookSecret = _stripeSettings.GetValue<string>("WebhookSecret");
 
             try

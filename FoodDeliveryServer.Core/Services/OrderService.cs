@@ -155,6 +155,7 @@ namespace FoodDeliveryServer.Core.Services
                 };
             }).ToList();
 
+            //change the domain
             var clientDomain = _clientSettings.GetValue<string>("ClientDomain");
 
             var options = new SessionCreateOptions()
