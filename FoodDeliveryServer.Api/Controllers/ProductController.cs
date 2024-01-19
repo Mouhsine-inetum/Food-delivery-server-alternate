@@ -10,7 +10,8 @@ using FoodDeliveryServer.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using FoodDeliveryServer.Azure.Servicebus;
+using FoodDeliveryServer.Common.Dto.Store;
 
 namespace FoodDeliveryServer.Api.Controllers
 {
@@ -19,10 +20,16 @@ namespace FoodDeliveryServer.Api.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
+        private readonly IServiceMessage _serviceMessage;
+        private string[] _messages;
 
-        public ProductController(IProductService productService)
+
+        public ProductController(IProductService productService,IServiceMessage serviceMessage)
         {
             _productService = productService;
+            _serviceMessage = serviceMessage;
+            _messages = new string[] { };
+
         }
 
         [HttpGet]
@@ -51,17 +58,20 @@ namespace FoodDeliveryServer.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Partner", Policy = "VerifiedPartner")]
+        [Authorize(Roles = "FoodDeliveryApi.Partner")]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequestDto requestDto)
         {
-            Claim? idClaim = User.Claims.FirstOrDefault(x => x.Type == "UserId");
-            long userId = long.Parse(idClaim!.Value);
+            //Claim? idClaim = User.Claims.FirstOrDefault(x => x.Type == "UserId");
+            //long userId = long.Parse(idClaim!.Value);
+            long userId = 2;
 
             CreateProductResponseDto responseDto;
 
             try
             {
                 responseDto = await _productService.CreateProduct(userId, requestDto);
+                await AddInfosFromInsertToMessages(responseDto);
+                await _serviceMessage.SendMessageServiceBus(_messages);
             }
             catch (ValidationException ex)
             {
@@ -184,6 +194,27 @@ namespace FoodDeliveryServer.Api.Controllers
             }
 
             return Ok(responseDto);
+        }
+
+        private Task AddInfosFromInsertToMessages(CreateProductResponseDto storeRequestDto)
+        {
+
+            _messages = _messages.Append($"Product").ToArray();
+
+            //Add the Id
+            _messages = _messages.Append($"{storeRequestDto.Id}").ToArray();
+            //add name
+            _messages = _messages.Append(storeRequestDto.Name).ToArray();
+            //add Description
+            _messages = _messages.Append(storeRequestDto.Description).ToArray();
+            //add Price
+            _messages = _messages = _messages.Append($"{storeRequestDto.Price}").ToArray();
+            //add Quantity
+            _messages = _messages = _messages.Append($"{storeRequestDto.Quantity}").ToArray();
+            //contact
+            _messages = _messages.Append($"{storeRequestDto.StoreId}").ToArray();
+
+            return Task.CompletedTask;
         }
     }
 }

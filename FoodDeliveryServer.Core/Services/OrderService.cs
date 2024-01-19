@@ -169,8 +169,8 @@ namespace FoodDeliveryServer.Core.Services
                     { "Coordinate", $"{order.Coordinate.X};{order.Coordinate.Y}" },
                 },
                 Mode = "payment",
-                SuccessUrl = clientDomain + "/payment?status=success",
-                CancelUrl = clientDomain + "/payment?status=cancel"
+                SuccessUrl = clientDomain + "/Orders",//"/payment?status=success",
+                CancelUrl = clientDomain + "/payment?status=cancel",
             };
 
             var service = new SessionService();

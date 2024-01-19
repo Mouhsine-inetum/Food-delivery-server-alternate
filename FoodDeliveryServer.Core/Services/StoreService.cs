@@ -74,7 +74,7 @@ namespace FoodDeliveryServer.Core.Services
         }
 
         public async Task<CreateStoreResponseDto> CreateStore(long partnerId, CreateStoreRequestDto requestDto)
-        {
+         {
             Store store = _mapper.Map<Store>(requestDto);
             store.PartnerId = partnerId;
 

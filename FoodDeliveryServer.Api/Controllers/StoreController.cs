@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using FoodDeliveryServer.Azure.Servicebus;
 using FoodDeliveryServer.Common.Dto.Auth;
 using FoodDeliveryServer.Common.Dto.Error;
 using FoodDeliveryServer.Common.Dto.Store;
@@ -8,6 +9,7 @@ using FoodDeliveryServer.Core.Interfaces;
 using FoodDeliveryServer.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 
 namespace FoodDeliveryServer.Api.Controllers
@@ -17,10 +19,14 @@ namespace FoodDeliveryServer.Api.Controllers
     public class StoreController : ControllerBase
     {
         private readonly IStoreService _storeService;
+        private readonly IServiceMessage _serviceMessage;
+        private  string[] _messages;
 
-        public StoreController(IStoreService storeService)
+        public StoreController(IStoreService storeService, IServiceMessage serviceMessage)
         {
+            _serviceMessage = serviceMessage;
             _storeService = storeService;
+            _messages = new string[] {};
         }
 
         [HttpGet]
@@ -49,17 +55,19 @@ namespace FoodDeliveryServer.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Partner", Policy = "VerifiedPartner")]
+        [Authorize(Roles = "FoodDeliveryApi.Partner")]
         public async Task<IActionResult> CreateStore([FromBody] CreateStoreRequestDto requestDto)
         {
-            Claim? idClaim = User.Claims.FirstOrDefault(x => x.Type == "UserId");
-            long userId = long.Parse(idClaim!.Value);
+            //Claim? idClaim = User.Claims.FirstOrDefault(x => x.Type == "UserId");
+            long userId = 2; //long.Parse(idClaim!.Value);
 
             CreateStoreResponseDto responseDto;
 
             try
             {
                 responseDto = await _storeService.CreateStore(userId, requestDto);
+                await AddInfosFromInsertToMessages(responseDto);
+                await _serviceMessage.SendMessageServiceBus(_messages);
             }
             catch (ValidationException ex)
             {
@@ -176,6 +184,22 @@ namespace FoodDeliveryServer.Api.Controllers
             }
 
             return Ok(responseDto);
+        }
+
+        private Task AddInfosFromInsertToMessages(CreateStoreResponseDto storeRequestDto)
+        {
+            _messages = _messages.Append($"Store").ToArray();
+
+            _messages = _messages.Append($"Store created").ToArray();
+            //add name
+            _messages = _messages.Append($"Store name : {storeRequestDto.Name}").ToArray();
+            //add partner
+           _messages = _messages.Append($"Description : {storeRequestDto.Description}").ToArray();
+            //add city
+            _messages=_messages = _messages.Append($"At : {storeRequestDto.City}").ToArray();
+            //contact
+            _messages = _messages.Append($"Who to contact : {storeRequestDto.Phone}").ToArray();
+            return Task.CompletedTask;
         }
     }
 }

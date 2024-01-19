@@ -18,9 +18,20 @@ using Product = FoodDeliveryServer.Data.Models.Product;
 using ProductService = FoodDeliveryServer.Core.Services.ProductService;
 using FoodDeliveryServer.Core.Interfaces;
 using FoodDeliveryServer.Core.Services;
-
+using FoodDeliveryServer.Common.Authorizations;
+using Microsoft.AspNetCore.CookiePolicy;
+using FoodDeliveryServer.Api;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Azure;
+using Azure.Messaging.ServiceBus;
+using Azure.Identity;
+using FoodDeliveryServer.Azure;
+using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 
@@ -58,24 +69,69 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
+///authentication from own idp
+
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//}).AddJwtBearer(options =>
+//{
+//    options.TokenValidationParameters = new TokenValidationParameters()
+//    {
+//        ValidateIssuer = true,
+//        ValidateAudience = true,
+//        ValidateLifetime = true,
+//        ValidateIssuerSigningKey = true,
+//        ValidAudience = builder.Configuration["JWTSettings:ValidAudience"],
+//        ValidIssuer = builder.Configuration["JWTSettings:ValidIssuer"],
+//        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"]))
+//    };
+//});
 
 
+///authentication from auth0
+///
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters()
+})
+//}).AddCookie(options =>
+//{
+//    options.Cookie.Name = "access_token";
+//})
+  .AddJwtBearer(options =>
+{//using jwt bearer configuration
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters=new TokenValidationParameters()
     {
-        ValidateIssuer = true,
         ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidAudience = builder.Configuration["JWTSettings:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWTSettings:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"]))
+        ValidateIssuer = true,
     };
+    options.ClaimsIssuer = builder.Configuration["Auth0:Authority"];
+    options.Authority = builder.Configuration["Auth0:Authority"];
+    options.Audience = builder.Configuration["Auth0:Audience"];
+
+    //options.Events = new JwtBearerEvents()
+    //{
+    //    OnMessageReceived = context =>
+    //    {
+    //        if (context.Request.Cookies.ContainsKey("access_token"))
+    //            context.Token = context.Request.Cookies["access_token"];
+    //        return Task.CompletedTask;
+    //    }
+    //};
+});
+
+
+
+
+builder.Services.AddAuthorization(options =>
+{
+    //adding policiy with a middlwecare check instead of manually implementing it => any policiy can be implemented and managed through the middleware
+    options.AddPolicy("AzureLogicApp", policy =>
+                                            policy.Requirements.Add(new HasScopeRequirement(builder.Configuration["Auth0:Authority"], "LogicApp:read")));
 });
 
 builder.Services.AddCors(options =>
@@ -92,10 +148,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("VerifiedPartner", policy => policy.RequireClaim("Status", "Accepted"));
-});
 
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
@@ -141,6 +193,27 @@ MapperConfiguration mapperConfig = new MapperConfiguration(config =>
 });
 
 builder.Services.AddSingleton(mapperConfig.CreateMapper());
+List<string> topics = builder.Configuration["ServiceBus:topics"].Split(' ').ToList();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    // Register clients for each service
+    clientBuilder.AddServiceBusClientWithNamespace(
+        builder.Configuration["ServiceBus:Namespace"]);
+    clientBuilder.UseCredential(new DefaultAzureCredential());
+
+    // Register a subclient for each Service Bus Queue
+    foreach (string topic in topics)
+    {
+        clientBuilder.AddClient<ServiceBusSender, ServiceBusClientOptions>(
+            (_, _, provider) => provider.GetService<ServiceBusClient>()
+                    .CreateSender(topic)).WithName(topic).ConfigureOptions(option =>
+                    {
+                        option.TransportType = ServiceBusTransportType.AmqpTcp;
+                    });
+    }
+});
+
+builder.Services.AddAzureService(builder.Configuration);
 
 var app = builder.Build();
 
@@ -162,7 +235,10 @@ StripeConfiguration.ApiKey = builder.Configuration["StripeSettings:SecretKey"];
 app.UseHttpsRedirection();
 app.UseCors("AllowClientApplication");
 
+//app.UseCookiePolicy();
+
 app.UseAuthentication();
+//app.UseMiddleware<tokenmiddlware>();
 app.UseAuthorization();
 
 app.MapControllers();
