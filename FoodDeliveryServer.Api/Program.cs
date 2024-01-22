@@ -130,8 +130,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     //adding policiy with a middlwecare check instead of manually implementing it => any policiy can be implemented and managed through the middleware
-    options.AddPolicy("AzureLogicApp", policy =>
-                                            policy.Requirements.Add(new HasScopeRequirement(builder.Configuration["Auth0:Authority"], "LogicApp:read")));
+    //options.AddPolicy("AzureLogicApp", policy =>
+                                           // policy.Requirements.Add(new HasScopeRequirement(builder.Configuration["Auth0:Authority"], "LogicApp:read")));
 });
 
 builder.Services.AddCors(options =>
