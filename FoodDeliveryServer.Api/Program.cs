@@ -143,8 +143,7 @@ builder.Services.AddCors(options =>
         corsBuilder
             .WithOrigins(clientDomain)
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowAnyMethod();
     });
 });
 
