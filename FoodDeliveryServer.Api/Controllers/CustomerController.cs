@@ -23,7 +23,7 @@ namespace FoodDeliveryServer.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy="AzureLogicApp",Roles = "FoodDeliveryApi.Admin")]
+        [Authorize(Roles = "FoodDeliveryApi.Admin")]
         public async Task<IActionResult> GetCustomers()
         {
             List<GetCustomerResponseDto> responseDto = await _customerService.GetCustomers();
