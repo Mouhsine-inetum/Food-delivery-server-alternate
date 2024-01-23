@@ -125,6 +125,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 
+builder.Services.AddScoped<IAuthorizationHandler, HasScopeHandler>();
 
 
 builder.Services.AddAuthorization(options =>
