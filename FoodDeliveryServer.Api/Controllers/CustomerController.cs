@@ -31,6 +31,15 @@ namespace FoodDeliveryServer.Api.Controllers
             return Ok(responseDto);
         }
 
+        [HttpGet("machine")]
+        [Authorize("AzureLogicApp")]
+        public async Task<IActionResult> GetCustomers()
+        {
+            List<GetCustomerResponseDto> responseDto = await _customerService.GetCustomers();
+
+            return Ok(responseDto);
+        }
+
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetCustomer(long id)
