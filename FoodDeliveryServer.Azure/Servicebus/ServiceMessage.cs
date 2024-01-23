@@ -57,7 +57,8 @@ namespace FoodDeliveryServer.Azure.Servicebus
                 var msg = new ServiceBusMessage($"{message[i]}");
                 msg.MessageId = idSession+i.ToString();
                 msg.SessionId = session+idSession;
-
+                msg.ApplicationProperties.Add("For", "Products");
+                
                 // try adding a message to the batch
                 if (!messageBatch.TryAddMessage(msg))
                 {
