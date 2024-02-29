@@ -1,40 +1,66 @@
 # Docs for the Azure Web Apps Deploy action: https://go.microsoft.com/fwlink/?linkid=2134798
 # More GitHub Actions for Azure: https://go.microsoft.com/fwlink/?linkid=2135048
 
-name: Azure App Service - webapi-dev-westeurope-4nggq6w4utpoi(Production), Build and deploy ASP .NET app
+name: Build and deploy ASP.Net Core app to Azure Web App - webapp-foodelivery-europe
 
 on:
   push:
     branches:
-      - main
+      - no-sensitive
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-latest
 
     steps:
-    # checkout the repo
-    - name: 'Checkout Github Action'
-      uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
 
-    - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.2
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.5
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
-    - name: Restore NuGet packages
-      run: nuget restore
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
 
-    - name: Publish to folder
-      run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write #This is required for requesting the JWT
 
-    - name: Run Azure webapp deploy action using publish profile credentials
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: webapi-dev-westeurope-4nggq6w4utpoi
-        slot-name: Production
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CF982E3190E1467BB52C2941177E8744 }}
-        package: \published\
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+      
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_99A3AD25368046689379CF84AF1DC428 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E764ABE968604A6F8F4C3A1BD3807DDC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3077719042554EDC8F71B8CF122999CA }}
+
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'webapp-foodelivery-europe'
+          slot-name: 'Production'
+          package: .
 
