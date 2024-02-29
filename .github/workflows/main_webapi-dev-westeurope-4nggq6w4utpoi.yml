@@ -60,7 +60,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'webapp-foodelivery-europe'
+          app-name: 'webapi-dev-westeurope-4nggq6w4utpoi'
           slot-name: 'Production'
           package: .
 
