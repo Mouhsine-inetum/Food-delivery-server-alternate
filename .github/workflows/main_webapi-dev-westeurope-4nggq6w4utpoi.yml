@@ -35,6 +35,6 @@ jobs:
       with:
         app-name: webapi-dev-westeurope-4nggq6w4utpoi
         slot-name: Production
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_071C4EF27A954332BDC74530AD1CF0BD }}
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CF982E3190E1467BB52C2941177E8744 }}
         package: \published\
 
